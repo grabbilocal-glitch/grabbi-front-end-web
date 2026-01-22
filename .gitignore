@@ -1,0 +1,26 @@
+# Node
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build output
+dist/
+build/
+
+# Vite
+.env.local
+.env.*.local
+.vite/
+*.local
+
+# Logs
+*.log
+
+# Editor/OS
+.DS_Store
+.idea/
+.vscode/
+*.sublime*
+
+# Optional
+coverage/
