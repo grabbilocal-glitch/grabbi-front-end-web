@@ -122,8 +122,8 @@ export default function CategoryPage() {
                     <button
                       key={range}
                       onClick={() => setFilters((prev) => ({ ...prev, priceRange: range }))}
-                      className={`px-3 py-2 rounded-xl border border-gray-200 dark:border-white/15 bg-gray-50 dark:bg-white/8 hover:bg-gray-100 dark:hover:bg-white/10 transition ${
-                        filters.priceRange === range ? 'ring-2 ring-brand-mint text-gray-900 dark:text-white' : 'text-gray-700 dark:text-white/70'
+                      className={`px-3 py-2 rounded-xl border border-gray-200 dark:border-white/20 bg-gray-50 dark:bg-white/15 hover:bg-gray-100 dark:hover:bg-white/20 transition ${
+                        filters.priceRange === range ? 'ring-2 ring-brand-mint bg-gray-100 dark:bg-white/25 text-gray-900 dark:text-white' : 'text-gray-700 dark:text-white/80'
                       }`}
                     >
                       {range === 'all' ? 'All' : range === '20+' ? '£20+' : `£${range}`}
@@ -142,8 +142,8 @@ export default function CategoryPage() {
                     <button
                       key={d.value}
                       onClick={() => handleDietaryChange(d.value)}
-                      className={`px-3 py-2 rounded-xl border border-gray-200 dark:border-white/15 bg-gray-50 dark:bg-white/8 hover:bg-gray-100 dark:hover:bg-white/10 text-sm transition ${
-                        filters.dietary.includes(d.value) ? 'ring-2 ring-brand-mint text-gray-900 dark:text-white' : 'text-gray-700 dark:text-white/70'
+                      className={`px-3 py-2 rounded-xl border border-gray-200 dark:border-white/20 bg-gray-50 dark:bg-white/15 hover:bg-gray-100 dark:hover:bg-white/20 text-sm transition ${
+                        filters.dietary.includes(d.value) ? 'ring-2 ring-brand-mint bg-gray-100 dark:bg-white/25 text-gray-900 dark:text-white' : 'text-gray-700 dark:text-white/80'
                       }`}
                     >
                       {d.label}
