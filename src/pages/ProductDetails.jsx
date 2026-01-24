@@ -30,6 +30,14 @@ export default function ProductDetails() {
     fetchProduct()
   }, [id])
 
+  // Set initial image to primary when product loads
+  useEffect(() => {
+    if (product && product.images && product.images.length > 0) {
+      const primaryIndex = product.images.findIndex(img => img.is_primary)
+      setCurrentImage(primaryIndex === -1 ? 0 : primaryIndex)
+    }
+  }, [product])
+
   if (loading) {
     return (
       <div className="text-center py-20 text-gray-600 dark:text-white/80 animate-fade-in">
@@ -51,14 +59,12 @@ export default function ProductDetails() {
     )
   }
 
-  // Generate unique image variations with different filters/crops
-  const supportsTransform = product.image?.includes('cloudinary')
-
-  const images = [
-    product.image,
-    supportsTransform ? `${product.image}?w=800&q=80` : product.image,
-    supportsTransform ? `${product.image}?w=800&h=800&q=80` : product.image,
-  ]
+  // Handle images
+  const images = product.images && product.images.length > 0 
+    ? product.images.map(img => img.image_url)
+    : product.image 
+      ? [product.image] 
+      : []
   const pointsEarned = Math.floor(product.price * quantity)
 
   const handleAddToCart = () => {
@@ -80,25 +86,32 @@ export default function ProductDetails() {
           <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-black/70 text-white text-xs font-medium backdrop-blur-sm border border-white/20">
             {product.category?.name || product.category || 'Product'}
           </div>
+          {images.length > 1 && (
+            <div className="absolute bottom-4 right-4 px-3 py-1 rounded-full bg-black/70 text-white text-xs font-medium backdrop-blur-sm border border-white/20">
+              {currentImage + 1} / {images.length}
+            </div>
+          )}
           <div className="absolute bottom-4 left-4 px-3 py-2 rounded-full bg-white/90 dark:bg-white/12 text-gray-900 dark:text-white/90 backdrop-blur-md border border-gray-200 dark:border-white/20 font-medium">
             {product.pack_size || product.packSize}
           </div>
         </div>
-        <div className="flex space-x-3">
-          {images.map((img, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentImage(index)}
-              className={`w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all duration-200 ${
-                currentImage === index
-                  ? 'border-brand-mint ring-2 ring-brand-mint/50 scale-105 shadow-lg'
-                  : 'border-gray-200 dark:border-white/15 hover:border-brand-mint/50 hover:scale-105'
-              }`}
-            >
-              <img src={img} alt={`${product.name}-${index}`} className="w-full h-full object-cover" loading="lazy" />
-            </button>
-          ))}
-        </div>
+        {images.length > 1 && (
+          <div className="flex space-x-3">
+            {images.map((img, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImage(index)}
+                className={`w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all duration-200 ${
+                  currentImage === index
+                    ? 'border-brand-mint ring-2 ring-brand-mint/50 scale-105 shadow-lg'
+                    : 'border-gray-200 dark:border-white/15 hover:border-brand-mint/50 hover:scale-105'
+                }`}
+              >
+                <img src={img} alt={`${product.name}-${index}`} className="w-full h-full object-cover" loading="lazy" />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="space-y-6">
@@ -156,10 +169,10 @@ export default function ProductDetails() {
           {product.stock > 0 ? (
             <>
               <div className="flex items-center space-x-3">
-                <div className="flex items-center rounded-2xl border border-gray-200 dark:border-white/15 bg-gray-50 dark:bg-white/8">
+                <div className="flex items-center rounded-2xl border border-gray-200 dark:border-white/20 bg-gray-50 dark:bg-white/15">
                   <button
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="p-3 text-gray-700 dark:text-white/80 hover:bg-gray-100 dark:hover:bg-white/10 transition-all hover:scale-105 active:scale-95"
+                    className="p-3 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/20 transition-all hover:scale-105 active:scale-95"
                     aria-label="Decrease quantity"
                   >
                     <MinusIcon className="h-5 w-5" />
@@ -167,7 +180,7 @@ export default function ProductDetails() {
                   <span className="px-5 text-lg font-semibold text-gray-900 dark:text-white w-12 text-center">{quantity}</span>
                   <button
                     onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
-                    className="p-3 text-gray-700 dark:text-white/80 hover:bg-gray-100 dark:hover:bg-white/10 transition-all hover:scale-105 active:scale-95"
+                    className="p-3 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/20 transition-all hover:scale-105 active:scale-95"
                     aria-label="Increase quantity"
                   >
                     <PlusIcon className="h-5 w-5" />

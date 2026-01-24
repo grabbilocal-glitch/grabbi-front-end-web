@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   MagnifyingGlassIcon,
@@ -17,6 +17,7 @@ import AuthModal from '../Auth/AuthModal'
 
 export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
+  const location = useLocation()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const navigate = useNavigate()
   const dispatch = useDispatch()
@@ -32,6 +33,13 @@ export default function Navbar() {
       navigate(`/category/all?search=${encodeURIComponent(searchQuery)}`)
     }
   }
+
+  // Clear search query when navigating away from category page
+  useEffect(() => {
+    if (!location.pathname.startsWith('/category')) {
+      setSearchQuery('')
+    }
+  }, [location])
 
   return (
     <>

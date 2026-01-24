@@ -33,25 +33,28 @@ export default function OrderTracking() {
 
       <div className="rounded-2xl glass-card border border-gray-200 dark:border-white/15 p-6 shadow-card">
         <div className="relative flex items-center justify-between">
-          <div className="absolute inset-x-6 top-6 h-1 bg-gray-200 dark:bg-white/12">
+          <div className="absolute inset-x-6 top-6 h-1 bg-gray-200 dark:bg-white/8 z-0">
             <div
               className="h-full bg-gradient-to-r from-brand-mint to-brand-emerald transition-all"
               style={{ width: `${((currentStatus - 1) / (ORDER_STATUSES.length - 1)) * 100}%` }}
             />
           </div>
+          
           {ORDER_STATUSES.map((status) => {
             const Icon = status.icon
             const active = status.id <= currentStatus
             return (
-              <div key={status.id} className="relative flex flex-col items-center flex-1">
+              <div key={status.id} className="relative flex flex-col items-center flex-1 z-10">
                 <div
                   className={`h-12 w-12 rounded-full flex items-center justify-center border-2 ${
-                    active ? 'bg-brand-mint text-brand-graphite border-brand-mint shadow-glow' : 'border-gray-300 dark:border-white/30 text-gray-500 dark:text-white/60 bg-gray-50 dark:bg-white/8'
+                    active 
+                      ? 'bg-brand-mint text-brand-graphite border-brand-mint shadow-glow' 
+                      : 'border-gray-300 dark:border-white/40 text-gray-500 dark:text-white bg-gray-50 dark:bg-gray-600'
                   }`}
                 >
                   <Icon className="h-6 w-6" />
                 </div>
-                <span className={`mt-2 text-sm text-center ${active ? 'text-gray-900 dark:text-white font-semibold' : 'text-gray-500 dark:text-white/60'}`}>
+                <span className={`mt-2 text-sm text-center ${active ? 'text-gray-900 dark:text-white font-semibold' : 'text-gray-500 dark:text-white/80'}`}>
                   {status.name}
                 </span>
                 {status.id === currentStatus && <span className="text-[11px] text-brand-mint mt-1">In progress</span>}
@@ -77,9 +80,9 @@ export default function OrderTracking() {
         </div>
       </div>
 
-      <div className="rounded-2xl glass-card border border-gray-200 dark:border-white/15 p-6 shadow-card">
+      <div className="rounded-2xl glass-card border border-gray-200 dark:border-white/20 p-6 shadow-card">
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Map preview</h3>
-        <div className="w-full h-64 rounded-2xl bg-gray-50 dark:bg-white/8 border border-gray-200 dark:border-white/15 flex items-center justify-center text-gray-600 dark:text-white/60">
+        <div className="w-full h-64 rounded-2xl bg-gray-50 dark:bg-white/15 border border-gray-200 dark:border-white/20 flex items-center justify-center text-gray-600 dark:text-white/80">
           Map view (Google Maps) will render here.
         </div>
       </div>

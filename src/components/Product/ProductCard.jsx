@@ -6,6 +6,11 @@ import { addItem, openCart } from '../../store/slices/cartSlice'
 export default function ProductCard({ product, compact = false }) {
   const dispatch = useDispatch()
 
+  // Get the appropriate image URL from images array
+  const imageUrl = product.images && product.images.length > 0 
+    ? (product.images.find(img => img.is_primary)?.image_url || product.images[0].image_url)
+    : product.image || ''
+
   const handleQuickAdd = (e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -19,7 +24,7 @@ export default function ProductCard({ product, compact = false }) {
     <Link to={`/product/${product.id}`} className="block group">
       <div className="relative rounded-2xl overflow-hidden border border-gray-200 dark:border-white/15 glass-card shadow-card transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-2xl">
         <div className="relative aspect-[4/5] overflow-hidden">
-          <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+          <img src={imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
           <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/20 text-xs font-semibold text-white backdrop-blur-md border border-white/30">
             {product.category?.name || product.category || 'Product'}

@@ -119,8 +119,8 @@ export default function Checkout() {
                 placeholder="Search your address (Google Places)"
                 className="w-full px-4 py-3 rounded-xl bg-white dark:bg-white/8 border border-gray-200 dark:border-white/15 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/50"
               />
-              <div className="p-4 rounded-xl bg-gray-50 dark:bg-white/8 border border-gray-200 dark:border-white/15">
-                <p className="text-sm text-gray-600 dark:text-white/70">Delivery slot</p>
+              <div className="p-4 rounded-xl bg-gray-50 dark:bg-white/15 border border-gray-200 dark:border-white/20">
+                <p className="text-sm text-gray-600 dark:text-white/80">Delivery slot</p>
                 <p className="text-gray-900 dark:text-white font-semibold">Standard delivery • ~2 hours</p>
               </div>
               {distanceValid === false && (
@@ -195,7 +195,7 @@ export default function Checkout() {
                     placeholder="Enter code"
                     className="flex-1 px-4 py-3 rounded-xl bg-white dark:bg-white/8 border border-gray-200 dark:border-white/15 text-gray-900 dark:text-white"
                   />
-                  <button className="px-4 rounded-xl bg-gray-100 dark:bg-white/12 border border-gray-200 dark:border-white/15 text-gray-700 dark:text-white/80">Apply</button>
+                  <button className="px-4 rounded-xl bg-gray-100 dark:bg-white/20 border border-gray-200 dark:border-white/25 text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-white/30 transition-all hover:scale-105 active:scale-95">Apply</button>
                 </div>
               </div>
 

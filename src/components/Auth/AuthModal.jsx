@@ -247,13 +247,13 @@ export default function AuthModal({ onClose }) {
         <div className="mt-6 grid md:grid-cols-2 gap-3">
           <button
             onClick={() => handleSocialLogin('google')}
-            className="w-full py-3 rounded-xl bg-gray-100 dark:bg-white/8 border border-gray-200 dark:border-white/15 text-gray-700 dark:text-white/80 hover:bg-gray-200 dark:hover:bg-white/10"
+            className="w-full py-3 rounded-xl bg-gray-100 dark:bg-white/20 border border-gray-200 dark:border-white/25 text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-white/30 transition-all hover:scale-105 active:scale-95"
           >
             Continue with Google
           </button>
           <button
             onClick={() => handleSocialLogin('apple')}
-            className="w-full py-3 rounded-xl bg-gray-100 dark:bg-white/8 border border-gray-200 dark:border-white/15 text-gray-700 dark:text-white/80 hover:bg-gray-200 dark:hover:bg-white/10"
+            className="w-full py-3 rounded-xl bg-gray-100 dark:bg-white/20 border border-gray-200 dark:border-white/25 text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-white/30 transition-all hover:scale-105 active:scale-95"
           >
             Continue with Apple
           </button>

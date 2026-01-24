@@ -41,14 +41,14 @@ export default function CartDrawer() {
         }`}
       >
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-white/15 bg-white/80 dark:bg-white/8">
+          <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-white/20 bg-white dark:bg-brand-graphite">
             <div>
               <p className="text-sm text-gray-600 dark:text-white/80">Your basket</p>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">GRABBI Cart</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white bg-gradient-to-r from-brand-mint to-brand-emerald bg-clip-text text-transparent">GRABBI Cart</h2>
             </div>
             <button
               onClick={() => dispatch(closeCart())}
-              className="p-2 rounded-xl bg-gray-100 dark:bg-white/12 hover:bg-gray-200 dark:hover:bg-white/15 transition-all hover:scale-105"
+              className="p-2 rounded-xl bg-gray-100 dark:bg-white/20 hover:bg-gray-200 dark:hover:bg-white/30 transition-all hover:scale-105"
               aria-label="Close cart"
             >
               <XMarkIcon className="h-6 w-6 text-gray-900 dark:text-white" />
@@ -73,8 +73,8 @@ export default function CartDrawer() {
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-white/8 flex items-center justify-center mb-4">
-                <ShoppingBagIcon className="h-10 w-10 text-gray-400 dark:text-white/60" />
+              <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-white/15 border border-gray-200 dark:border-white/20 flex items-center justify-center mb-4">
+                <ShoppingBagIcon className="h-10 w-10 text-gray-400 dark:text-white" />
               </div>
               <p className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Your cart is empty</p>
               <p className="text-sm text-gray-600 dark:text-white/70 mb-6">Add items to get started</p>
@@ -89,19 +89,25 @@ export default function CartDrawer() {
               </button>
             </div>
           ) : (
-            items.map((item) => (
-              <div key={item.id} className="flex items-start space-x-4 rounded-2xl bg-gray-50 dark:bg-white/8 border border-gray-200 dark:border-white/15 p-4 shadow-card hover:shadow-lg transition-shadow">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-20 h-20 object-cover rounded-xl border border-gray-200 dark:border-white/15"
-                />
+            items.map((item) => {
+              // Get appropriate image URL from images array
+              const imageUrl = item.images && item.images.length > 0 
+                ? (item.images.find(img => img.is_primary)?.image_url || item.images[0].image_url)
+                : item.image || ''
+              
+              return (
+                <div key={item.id} className="flex items-start space-x-4 rounded-2xl bg-gray-50 dark:bg-white/15 border border-gray-200 dark:border-white/20 p-4 shadow-card hover:shadow-lg transition-shadow">
+                  <img
+                    src={imageUrl}
+                    alt={item.name}
+                    className="w-20 h-20 object-cover rounded-xl border border-gray-200 dark:border-white/15"
+                  />
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-2">{item.name}</h3>
                     <button
                       onClick={() => dispatch(removeItem(item.id))}
-                      className="p-1 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-600 dark:text-white/60 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                      className="p-1 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 text-gray-600 dark:text-white/80 hover:text-red-600 dark:hover:text-red-300 transition-colors"
                       aria-label={`Remove ${item.name} from cart`}
                     >
                       <TrashIcon className="h-4 w-4" />
@@ -112,7 +118,7 @@ export default function CartDrawer() {
                   <div className="flex items-center space-x-3 mt-3">
                     <button
                       onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity - 1 }))}
-                      className="p-2 rounded-lg bg-gray-200 dark:bg-white/12 hover:bg-gray-300 dark:hover:bg-white/15 transition-all hover:scale-105 active:scale-95"
+                      className="p-2 rounded-lg bg-gray-200 dark:bg-white/20 hover:bg-gray-300 dark:hover:bg-white/30 transition-all hover:scale-105 active:scale-95"
                       aria-label="Decrease quantity"
                     >
                       <MinusIcon className="h-4 w-4 text-gray-900 dark:text-white" />
@@ -120,15 +126,16 @@ export default function CartDrawer() {
                     <span className="w-8 text-center text-sm font-semibold text-gray-900 dark:text-white">{item.quantity}</span>
                     <button
                       onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }))}
-                      className="p-2 rounded-lg bg-gray-200 dark:bg-white/12 hover:bg-gray-300 dark:hover:bg-white/15 transition-all hover:scale-105 active:scale-95"
+                      className="p-2 rounded-lg bg-gray-200 dark:bg-white/20 hover:bg-gray-300 dark:hover:bg-white/30 transition-all hover:scale-105 active:scale-95"
                       aria-label="Increase quantity"
                     >
                       <PlusIcon className="h-4 w-4 text-gray-900 dark:text-white" />
                     </button>
                   </div>
+                  </div>
                 </div>
-              </div>
-            ))
+              )
+            })
           )}
         </div>
 
