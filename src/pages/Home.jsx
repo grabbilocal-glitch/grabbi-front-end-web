@@ -126,19 +126,37 @@ export default function Home() {
                 {promotions.map((promo, index) => (
                   <div
                     key={promo.id}
-                    className="relative min-w-full h-full flex-shrink-0"
+                    className={`relative min-w-full h-full flex-shrink-0 ${promo.product_url ? 'cursor-pointer' : ''}`}
                   >
-                    <img
-                      src={promo.image}
-                      alt={promo.title}
-                      className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-tr from-black/70 via-black/40 to-transparent" />
-                    <div className="absolute bottom-6 left-6 right-6 space-y-2 z-10">
-                      <p className="text-sm text-white/90 font-medium">Featured</p>
-                      <h3 className="text-2xl font-bold text-white">{promo.title}</h3>
-                      <p className="text-white/90 text-sm max-w-md">{promo.description}</p>
-                    </div>
+                    {promo.product_url ? (
+                      <Link to={promo.product_url} className="absolute inset-0 z-10">
+                        <img
+                          src={promo.image}
+                          alt={promo.title}
+                          className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-tr from-black/70 via-black/40 to-transparent" />
+                        <div className="absolute bottom-6 left-6 right-6 space-y-2">
+                          <p className="text-sm text-white/90 font-medium">Featured</p>
+                          <h3 className="text-2xl font-bold text-white">{promo.title}</h3>
+                          <p className="text-white/90 text-sm max-w-md">{promo.description}</p>
+                        </div>
+                      </Link>
+                    ) : (
+                      <>
+                        <img
+                          src={promo.image}
+                          alt={promo.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-tr from-black/70 via-black/40 to-transparent" />
+                        <div className="absolute bottom-6 left-6 right-6 space-y-2">
+                          <p className="text-sm text-white/90 font-medium">Featured</p>
+                          <h3 className="text-2xl font-bold text-white">{promo.title}</h3>
+                          <p className="text-white/90 text-sm max-w-md">{promo.description}</p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>

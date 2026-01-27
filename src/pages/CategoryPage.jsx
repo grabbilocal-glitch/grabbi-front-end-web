@@ -24,21 +24,31 @@ export default function CategoryPage() {
   useEffect(() => {
     let filtered = [...products]
     if (categoryName && categoryName !== 'all') {
-      filtered = filtered.filter((p) => p.category_id.toLowerCase() === categoryName.toLowerCase())
+      filtered = filtered.filter((p) => {
+        const categoryId = p.category_id || p.category?.id || p.category
+        if (!categoryId) return false
+        return categoryId.toLowerCase() === categoryName.toLowerCase()
+      })
     }
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
-      filtered = filtered.filter(
-        (p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q)
-      )
+      filtered = filtered.filter((p) => {
+        const name = (p.item_name || p.name || '').toLowerCase()
+        const description = (p.short_description || p.long_description || p.description || '').toLowerCase()
+        const brand = (p.brand || '').toLowerCase()
+        return name.includes(q) || description.includes(q) || brand.includes(q)
+      })
     }
     if (filters.priceRange !== 'all') {
       if (filters.priceRange.includes('+')) {
         const min = Number(filters.priceRange.replace('+', ''))
-        filtered = filtered.filter((p) => p.price >= min)
+        filtered = filtered.filter((p) => (p.retail_price || p.price) >= min)
       } else {
         const [min, max] = filters.priceRange.split('-').map(Number)
-        filtered = filtered.filter((p) => p.price >= min && p.price <= max)
+        filtered = filtered.filter((p) => {
+          const price = p.retail_price || p.price
+          return price >= min && price <= max
+        })
       }
     }
     if (filters.dietary.length > 0) {

@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { XMarkIcon, PlusIcon, MinusIcon, TrashIcon, ShoppingBagIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, PlusIcon, MinusIcon, TrashIcon, ShoppingBagIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import {
   selectCartItems,
   selectCartTotal,
@@ -21,6 +21,9 @@ export default function CartDrawer() {
   const deliveryFee = total < FREE_DELIVERY_THRESHOLD ? DELIVERY_FEE : 0
   const finalTotal = total + deliveryFee
   const remainingForFreeDelivery = Math.max(0, FREE_DELIVERY_THRESHOLD - total)
+  
+  // Check if cart contains age-restricted items
+  const hasAgeRestrictedItems = items.some(item => item.is_age_restricted)
 
   const handleCheckout = () => {
     dispatch(closeCart())
@@ -54,6 +57,21 @@ export default function CartDrawer() {
               <XMarkIcon className="h-6 w-6 text-gray-900 dark:text-white" />
             </button>
           </div>
+
+        {/* Age Restriction Warning */}
+        {hasAgeRestrictedItems && (
+          <div className="px-5 py-3 border-b border-gray-200 dark:border-white/5 bg-gradient-to-r from-red-500/20 to-red-600/10">
+            <div className="flex items-start gap-2">
+              <ExclamationTriangleIcon className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-semibold text-red-800 dark:text-red-300">Age Verification Required</p>
+                <p className="text-red-600 dark:text-red-400 text-xs mt-1">
+                  This order contains age-restricted items. You will need to verify your age at checkout.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {total < FREE_DELIVERY_THRESHOLD && (
           <div className="px-5 py-4 border-b border-gray-200 dark:border-white/5 bg-gradient-to-r from-brand-emerald/20 to-brand-mint/10">
@@ -113,7 +131,9 @@ export default function CartDrawer() {
                       <TrashIcon className="h-4 w-4" />
                     </button>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-white/80">{item.packSize}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-gray-600 dark:text-white/80">{item.packSize || item.pack_size}</p>
+                  </div>
                   <p className="text-brand-gold font-semibold">£{item.price.toFixed(2)}</p>
                   <div className="flex items-center space-x-3 mt-3">
                     <button

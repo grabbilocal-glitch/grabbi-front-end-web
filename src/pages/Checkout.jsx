@@ -5,6 +5,7 @@ import { selectCartItems, selectCartTotal, clearCart } from '../store/slices/car
 import { selectIsAuthenticated } from '../store/slices/authSlice'
 import { addPoints } from '../store/slices/loyaltySlice'
 import { FREE_DELIVERY_THRESHOLD, DELIVERY_FEE, STORE_COORDINATES, DELIVERY_RADIUS_MILES } from '../data/mockData'
+import Toast from '../components/UI/Toast'
 
 const steps = ['Address', 'Payment', 'Done']
 
@@ -22,6 +23,7 @@ export default function Checkout() {
   const [promoCode, setPromoCode] = useState('')
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [orderId] = useState(`ORD${Date.now()}`)
+  const [toast, setToast] = useState(null)
 
   const deliveryFee = subtotal < FREE_DELIVERY_THRESHOLD ? DELIVERY_FEE : 0
   const finalTotal = subtotal + deliveryFee
@@ -46,7 +48,7 @@ export default function Checkout() {
 
   const handleStep1Next = () => {
     if (!address.trim()) {
-      alert('Please enter an address')
+      setToast({ type: 'error', message: 'Please enter an address' })
       return
     }
     handleAddressSelect()
@@ -261,6 +263,15 @@ export default function Checkout() {
             </div>
           </div>
         </div>
+      )}
+      
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          duration={3000}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   )
