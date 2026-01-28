@@ -134,7 +134,18 @@ export default function CartDrawer() {
                   <div className="flex items-center gap-2">
                     <p className="text-sm text-gray-600 dark:text-white/80">{item.packSize || item.pack_size}</p>
                   </div>
-                  <p className="text-brand-gold font-semibold">£{item.price.toFixed(2)}</p>
+                  <div className="flex items-center flex-wrap gap-1.5 text-[10px] mt-1">
+                    {(item.is_vegan || item.isVegan) && (
+                      <span className="px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-medium border border-green-200 dark:border-green-700/30">Vegan</span>
+                    )}
+                    {(item.is_vegetarian || item.isVegetarian) && (
+                      <span className="px-1.5 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 font-medium border border-teal-200 dark:border-teal-700/30">Vegetarian</span>
+                    )}
+                    {(item.is_gluten_free || item.isGlutenFree) && (
+                      <span className="px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 font-medium border border-amber-200 dark:border-amber-700/30">Gluten Free</span>
+                    )}
+                  </div>
+                  <p className="text-brand-gold font-semibold mt-2">£{item.price.toFixed(2)}</p>
                   <div className="flex items-center space-x-3 mt-3">
                     <button
                       onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity - 1 }))}

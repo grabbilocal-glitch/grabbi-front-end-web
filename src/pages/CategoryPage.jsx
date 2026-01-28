@@ -55,6 +55,7 @@ export default function CategoryPage() {
       filtered = filtered.filter((p) => {
         return filters.dietary.some((d) => {
           if (d === 'vegan') return p.is_vegan
+          if (d === 'vegetarian') return p.is_vegetarian
           if (d === 'gluten-free') return p.is_gluten_free
           return false
         })
@@ -147,6 +148,7 @@ export default function CategoryPage() {
                 <div className="flex flex-wrap gap-2">
                   {[
                     { label: 'Vegan', value: 'vegan' },
+                    { label: 'Vegetarian', value: 'vegetarian' },
                     { label: 'Gluten free', value: 'gluten-free' },
                   ].map((d) => (
                     <button

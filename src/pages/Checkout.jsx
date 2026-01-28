@@ -217,10 +217,23 @@ export default function Checkout() {
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Order summary</h3>
               <span className="text-xs text-gray-600 dark:text-white/60">{items.length} items</span>
             </div>
-            <div className="space-y-2 text-sm text-gray-700 dark:text-white/80 max-h-60 overflow-y-auto pr-2">
+            <div className="space-y-3 text-sm text-gray-700 dark:text-white/80 max-h-60 overflow-y-auto pr-2">
               {items.map((item) => (
-                <div key={item.id} className="flex justify-between">
-                  <span className="line-clamp-1">{item.name} x{item.quantity}</span>
+                <div key={item.id} className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <span className="line-clamp-1">{item.name} x{item.quantity}</span>
+                    <div className="flex items-center flex-wrap gap-1 mt-1">
+                      {(item.is_vegan || item.isVegan) && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-medium border border-green-200 dark:border-green-700/30 text-[10px]">Vegan</span>
+                      )}
+                      {(item.is_vegetarian || item.isVegetarian) && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 font-medium border border-teal-200 dark:border-teal-700/30 text-[10px]">Vegetarian</span>
+                      )}
+                      {(item.is_gluten_free || item.isGlutenFree) && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 font-medium border border-amber-200 dark:border-amber-700/30 text-[10px]">Gluten Free</span>
+                      )}
+                    </div>
+                  </div>
                   <span>£{(item.price * item.quantity).toFixed(2)}</span>
                 </div>
               ))}
