@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import ProductCard from '../components/Product/ProductCard'
 import { productService } from '../services/productService'
+import { franchiseService } from '../services/franchiseService'
+import { selectSelectedFranchise } from '../store/slices/franchiseSlice'
 
 export default function CategoryPage() {
   const { categoryName } = useParams()
@@ -12,14 +15,31 @@ export default function CategoryPage() {
   const [filters, setFilters] = useState({ priceRange: 'all', dietary: [], brand: 'all' })
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const selectedFranchise = useSelector(selectSelectedFranchise)
 
   const searchQuery = searchParams.get('search')
   const brands = [...new Set(products.map((p) => p.brand))]
 
   useEffect(() => {
-    fetchProducts()
-    
-  }, [])
+    let cancelled = false
+    const doFetch = async () => {
+      try {
+        const productsData = selectedFranchise?.id
+          ? await franchiseService.getFranchiseProducts(selectedFranchise.id)
+          : await productService.getProducts()
+
+        if (cancelled) return
+        setProducts(productsData || [])
+      } catch {
+        if (cancelled) return
+        setProducts([])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    doFetch()
+    return () => { cancelled = true }
+  }, [selectedFranchise])
 
   useEffect(() => {
     let filtered = [...products]
@@ -72,22 +92,6 @@ export default function CategoryPage() {
       ...prev,
       dietary: prev.dietary.includes(d) ? prev.dietary.filter((x) => x !== d) : [...prev.dietary, d],
     }))
-  }
-
-  const fetchProducts = async () => {
-    try {
-      const [productsData] = await Promise.all([
-        productService.getProducts(),
-      ])
-
-      setProducts(productsData)
-    } catch (error) {
-      console.error('Failed to fetch data:', error)
-      // Fallback to empty arrays
-      setProducts([])
-    } finally {
-      setLoading(false)
-    }
   }
 
   if (loading) {

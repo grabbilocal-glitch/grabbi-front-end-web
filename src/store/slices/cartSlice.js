@@ -1,7 +1,31 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+// Load cart from localStorage
+function loadCartFromStorage() {
+  try {
+    const saved = localStorage.getItem('grabbi_cart');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+    }
+  } catch {
+    // ignore parse errors
+  }
+  return [];
+}
+
+function saveCartToStorage(items) {
+  try {
+    localStorage.setItem('grabbi_cart', JSON.stringify(items));
+  } catch {
+    // localStorage may not be available or quota exceeded
+  }
+}
+
 const initialState = {
-  items: [],
+  items: loadCartFromStorage(),
   isOpen: false,
 };
 
@@ -18,9 +42,11 @@ const cartSlice = createSlice({
       } else {
         state.items.push({ ...action.payload, quantity: action.payload.quantity || 1 });
       }
+      saveCartToStorage(state.items);
     },
     removeItem: (state, action) => {
       state.items = state.items.filter(item => item.id !== action.payload);
+      saveCartToStorage(state.items);
     },
     updateQuantity: (state, action) => {
       const { id, quantity } = action.payload;
@@ -32,9 +58,11 @@ const cartSlice = createSlice({
           item.quantity = quantity;
         }
       }
+      saveCartToStorage(state.items);
     },
     clearCart: (state) => {
       state.items = [];
+      saveCartToStorage(state.items);
     },
     toggleCart: (state) => {
       state.isOpen = !state.isOpen;
@@ -52,7 +80,7 @@ export const { addItem, removeItem, updateQuantity, clearCart, toggleCart, openC
 
 export const selectCartItems = (state) => state.cart.items;
 export const selectCartTotal = (state) => {
-  return state.cart.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  return state.cart.items.reduce((total, item) => total + ((item.promotion_price || item.retail_price || item.price) * item.quantity), 0);
 };
 export const selectCartItemCount = (state) => {
   return state.cart.items.reduce((count, item) => count + item.quantity, 0);
@@ -60,4 +88,3 @@ export const selectCartItemCount = (state) => {
 export const selectIsCartOpen = (state) => state.cart.isOpen;
 
 export default cartSlice.reducer;
-

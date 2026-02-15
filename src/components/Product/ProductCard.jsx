@@ -24,7 +24,9 @@ export default function ProductCard({ product, compact = false }) {
   }
 
   const promotionActive = isPromotionActive()
-  const currentPrice = promotionActive ? product.promotion_price : (product.retail_price || product.price)
+  const currentPrice = promotionActive
+    ? (product.promotion_price || 0)
+    : (product.retail_price || product.price || 0)
   const stockQuantity = product.stock_quantity || product.stock
   const itemName = product.item_name || product.name
   const packSize = product.pack_size || product.packSize
@@ -68,7 +70,7 @@ export default function ProductCard({ product, compact = false }) {
               {promotionActive ? (
                 <div className="flex items-center gap-2">
                   <p className="text-lg font-bold text-brand-mint">£{currentPrice.toFixed(2)}</p>
-                  <p className="text-xs text-white/60 line-through">£{(product.retail_price || product.price).toFixed(2)}</p>
+                  <p className="text-xs text-white/60 line-through">£{(product.retail_price || product.price || 0).toFixed(2)}</p>
                 </div>
               ) : (
                 <p className="text-lg font-bold text-white">£{currentPrice.toFixed(2)}</p>

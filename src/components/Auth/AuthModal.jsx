@@ -9,27 +9,13 @@ import { api, setAuthToken } from '../../utils/api'
 export default function AuthModal({ onClose }) {
   const [mode, setMode] = useState('login')
   const [formData, setFormData] = useState({ email: '', password: '', firstName: '', lastName: '', phone: '' })
-  const [otpSent, setOtpSent] = useState(false)
-  const [otp, setOtp] = useState('')
   const [toast, setToast] = useState(null)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotSubmitting, setForgotSubmitting] = useState(false)
+  const [forgotSuccess, setForgotSuccess] = useState(false)
   const dispatch = useDispatch()
 
   const handleInputChange = (e) => setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
-
-  const completeAuth = (payload = {}) => {
-    const customerId = `CUST${Date.now()}`
-    dispatch(
-      setUser({
-        email: formData.email || payload.email,
-        phone: formData.phone || payload.phone,
-        firstName: formData.firstName || 'Guest',
-        lastName: formData.lastName || 'User',
-      })
-    )
-    dispatch(setCustomerId(customerId))
-    dispatch(setPoints(250))
-    onClose()
-  }
 
   const handleEmailLogin = async (e) => {
     e.preventDefault()
@@ -40,6 +26,7 @@ export default function AuthModal({ onClose }) {
           password: formData.password,
         })
         setAuthToken(response.data.token)
+        localStorage.setItem('refresh_token', response.data.refresh_token || '')
         // Parse user name into firstName and lastName
         const userName = response.data.user.name || ''
         const nameParts = userName.split(' ')
@@ -61,6 +48,7 @@ export default function AuthModal({ onClose }) {
           name: `${formData.firstName} ${formData.lastName}`,
         })
         setAuthToken(response.data.token)
+        localStorage.setItem('refresh_token', response.data.refresh_token || '')
         // Parse user name into firstName and lastName
         const userName = response.data.user.name || ''
         const nameParts = userName.split(' ')
@@ -84,19 +72,26 @@ export default function AuthModal({ onClose }) {
     }
   }
 
-  const handlePhoneOTP = (e) => {
+  const handleForgotPassword = async (e) => {
     e.preventDefault()
-    if (!otpSent) {
-      setOtpSent(true)
-      setToast({ type: 'success', message: 'OTP sent! (demo)' })
-    } else if (otp.length === 6) {
-      completeAuth({ phone: formData.phone })
-    } else {
-      setToast({ type: 'error', message: 'Please enter a valid 6-digit OTP' })
+    if (!forgotEmail.trim()) {
+      setToast({ type: 'error', message: 'Please enter your email address' })
+      return
+    }
+    setForgotSubmitting(true)
+    try {
+      await api.post('/auth/forgot-password', { email: forgotEmail })
+      setForgotSuccess(true)
+      setToast({ type: 'success', message: 'Password reset email sent!' })
+    } catch (error) {
+      setToast({
+        type: 'error',
+        message: error.response?.data?.error || 'Failed to send reset email',
+      })
+    } finally {
+      setForgotSubmitting(false)
     }
   }
-
-  const handleSocialLogin = (provider) => completeAuth({ email: `user@${provider}.com` })
 
   return (
     <>
@@ -130,134 +125,149 @@ export default function AuthModal({ onClose }) {
             ))}
           </div>
 
-        <form onSubmit={handleEmailLogin} className="space-y-4">
-          {mode === 'signup' && (
-            <div className="grid md:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-gray-600 dark:text-white/60">First name *</label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-3 rounded-xl bg-white dark:bg-white/8 border border-gray-200 dark:border-white/15 text-gray-900 dark:text-white"
-                />
+        {mode === 'forgotPassword' ? (
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Reset your password</h3>
+            {forgotSuccess ? (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600 dark:text-white/70">
+                  If an account exists with that email, you will receive a password reset link shortly.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setMode('login'); setForgotSuccess(false); setForgotEmail('') }}
+                  className="w-full py-3 rounded-xl button-primary text-brand-graphite font-semibold"
+                >
+                  Back to login
+                </button>
               </div>
-              <div>
-                <label className="text-xs text-gray-600 dark:text-white/60">Last name *</label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-3 rounded-xl bg-white dark:bg-white/8 border border-gray-200 dark:border-white/15 text-gray-900 dark:text-white"
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="grid md:grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="email" className="text-xs text-gray-600 dark:text-white/80 font-medium">Email</label>
-              <input
-                id="email"
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-3 rounded-xl bg-white dark:bg-white/8 border border-gray-200 dark:border-white/15 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-mint/50 transition-all"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="text-xs text-gray-600 dark:text-white/80 font-medium">Password</label>
-              <input
-                id="password"
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-3 rounded-xl bg-white dark:bg-white/8 border border-gray-200 dark:border-white/15 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-mint/50 transition-all"
-              />
-            </div>
-          </div>
-          <button type="submit" className="w-full py-3 rounded-xl button-primary text-brand-graphite font-semibold">
-            {mode === 'login' ? 'Login' : 'Create account'}
-          </button>
-        </form>
-
-        <div className="flex items-center my-6 space-x-3 text-gray-400 dark:text-white/60 text-xs uppercase tracking-wide">
-          <div className="flex-1 h-px bg-gray-200 dark:bg-white/12" />
-          <span>or</span>
-          <div className="flex-1 h-px bg-gray-200 dark:bg-white/12" />
-        </div>
-
-        <form onSubmit={handlePhoneOTP} className="space-y-3">
-          <div className="grid md:grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="phone" className="text-xs text-gray-600 dark:text-white/80 font-medium">Phone *</label>
-              <input
-                id="phone"
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                required
-                placeholder="+44 123 456 7890"
-                className="w-full px-3 py-3 rounded-xl bg-white dark:bg-white/8 border border-gray-200 dark:border-white/15 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-mint/50 transition-all"
-              />
-            </div>
-            {mode === 'signup' && !otpSent && (
-              <div>
-                <label htmlFor="phoneFirstName" className="text-xs text-gray-600 dark:text-white/80 font-medium">First name *</label>
-                <input
-                  id="phoneFirstName"
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-3 rounded-xl bg-white dark:bg-white/8 border border-gray-200 dark:border-white/15 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-mint/50 transition-all"
-                />
-              </div>
+            ) : (
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <p className="text-sm text-gray-600 dark:text-white/70">
+                  Enter your email address and we will send you a link to reset your password.
+                </p>
+                <div>
+                  <label htmlFor="forgot-email" className="text-xs text-gray-600 dark:text-white/80 font-medium">Email</label>
+                  <input
+                    id="forgot-email"
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    required
+                    placeholder="you@example.com"
+                    className="w-full px-3 py-3 rounded-xl bg-white dark:bg-white/8 border border-gray-200 dark:border-white/15 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-mint/50 transition-all"
+                  />
+                </div>
+                <button type="submit" disabled={forgotSubmitting} className="w-full py-3 rounded-xl button-primary text-brand-graphite font-semibold disabled:opacity-50">
+                  {forgotSubmitting ? 'Sending...' : 'Send reset link'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setMode('login'); setForgotEmail('') }}
+                  className="w-full text-sm text-gray-500 dark:text-white/60 hover:underline"
+                >
+                  Back to login
+                </button>
+              </form>
             )}
           </div>
-          {otpSent && (
-            <div>
-              <label htmlFor="otp" className="text-xs text-gray-600 dark:text-white/80 font-medium">Enter OTP</label>
-              <input
-                id="otp"
-                type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                maxLength={6}
-                placeholder="6 digits"
-                className="w-full px-3 py-3 rounded-xl bg-white dark:bg-white/8 border border-gray-200 dark:border-white/15 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-mint/50 transition-all"
-              />
-            </div>
-          )}
-          <button type="submit" className="w-full py-3 rounded-xl button-ghost">
-            {otpSent ? 'Verify OTP' : 'Send OTP'}
-          </button>
-        </form>
+        ) : (
+          <>
+            <form onSubmit={handleEmailLogin} className="space-y-4">
+              {mode === 'signup' && (
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="auth-firstName" className="text-xs text-gray-600 dark:text-white/60">First name *</label>
+                    <input
+                      id="auth-firstName"
+                      type="text"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-3 rounded-xl bg-white dark:bg-white/8 border border-gray-200 dark:border-white/15 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="auth-lastName" className="text-xs text-gray-600 dark:text-white/60">Last name *</label>
+                    <input
+                      id="auth-lastName"
+                      type="text"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-3 rounded-xl bg-white dark:bg-white/8 border border-gray-200 dark:border-white/15 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                </div>
+              )}
 
-        <div className="mt-6 grid md:grid-cols-2 gap-3">
-          <button
-            onClick={() => handleSocialLogin('google')}
-            className="w-full py-3 rounded-xl bg-gray-100 dark:bg-white/20 border border-gray-200 dark:border-white/25 text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-white/30 transition-all hover:scale-105 active:scale-95"
-          >
-            Continue with Google
-          </button>
-          <button
-            onClick={() => handleSocialLogin('apple')}
-            className="w-full py-3 rounded-xl bg-gray-100 dark:bg-white/20 border border-gray-200 dark:border-white/25 text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-white/30 transition-all hover:scale-105 active:scale-95"
-          >
-            Continue with Apple
-          </button>
-        </div>
+              <div className="grid md:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="email" className="text-xs text-gray-600 dark:text-white/80 font-medium">Email</label>
+                  <input
+                    id="email"
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 py-3 rounded-xl bg-white dark:bg-white/8 border border-gray-200 dark:border-white/15 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-mint/50 transition-all"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="password" className="text-xs text-gray-600 dark:text-white/80 font-medium">Password</label>
+                  <input
+                    id="password"
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 py-3 rounded-xl bg-white dark:bg-white/8 border border-gray-200 dark:border-white/15 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-mint/50 transition-all"
+                  />
+                </div>
+              </div>
+              <button type="submit" className="w-full py-3 rounded-xl button-primary text-brand-graphite font-semibold">
+                {mode === 'login' ? 'Login' : 'Create account'}
+              </button>
+              {mode === 'login' && (
+                <button type="button" onClick={() => setMode('forgotPassword')} className="text-sm text-brand-mint hover:underline mt-2">Forgot password?</button>
+              )}
+            </form>
+
+            <div className="flex items-center my-6 space-x-3 text-gray-400 dark:text-white/60 text-xs uppercase tracking-wide">
+              <div className="flex-1 h-px bg-gray-200 dark:bg-white/12" />
+              <span>or</span>
+              <div className="flex-1 h-px bg-gray-200 dark:bg-white/12" />
+            </div>
+
+            <div className="space-y-3">
+              <div className="p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
+                <p className="text-sm text-gray-500 dark:text-white/50 font-medium">Phone / OTP login</p>
+                <p className="text-xs text-gray-400 dark:text-white/40 mt-1">Coming soon</p>
+              </div>
+            </div>
+
+            <div className="mt-6 grid md:grid-cols-2 gap-3">
+              <button
+                disabled
+                className="w-full py-3 rounded-xl bg-gray-100 dark:bg-white/20 border border-gray-200 dark:border-white/25 text-gray-400 dark:text-white/40 cursor-not-allowed opacity-60"
+                title="Coming soon"
+              >
+                Google (Coming soon)
+              </button>
+              <button
+                disabled
+                className="w-full py-3 rounded-xl bg-gray-100 dark:bg-white/20 border border-gray-200 dark:border-white/25 text-gray-400 dark:text-white/40 cursor-not-allowed opacity-60"
+                title="Coming soon"
+              >
+                Apple (Coming soon)
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
     </>

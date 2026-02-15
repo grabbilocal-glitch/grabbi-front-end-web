@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid'
+import { MapPinIcon } from '@heroicons/react/24/outline'
 import ProductCard from '../components/Product/ProductCard'
 import { useSelector } from 'react-redux'
 import { selectIsAuthenticated } from '../store/slices/authSlice'
+import { selectSelectedFranchise } from '../store/slices/franchiseSlice'
 import { productService } from '../services/productService'
+import { franchiseService } from '../services/franchiseService'
+import StoreSelector from '../components/Location/StoreSelector'
 
 export default function Home() {
   const [currentPromo, setCurrentPromo] = useState(0)
@@ -14,38 +18,59 @@ export default function Home() {
   const [bestSellers, setBestSellers] = useState([])
   const [newArrivals, setNewArrivals] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showStoreSelector, setShowStoreSelector] = useState(false)
   const isAuthenticated = useSelector(selectIsAuthenticated)
+  const selectedFranchise = useSelector(selectSelectedFranchise)
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    let cancelled = false
+    const fetchData = async () => {
+      try {
+        const franchiseId = selectedFranchise?.id
 
-  const fetchData = async () => {
-    try {
-      const [categoriesData, promotionsData, productsData] = await Promise.all([
-        productService.getCategories(),
-        productService.getPromotions(),
-        productService.getProducts(),
-      ])
+        // Fetch categories (always from master catalog)
+        const categoriesPromise = productService.getCategories()
 
-      setCategories(categoriesData || [])
-      setPromotions(promotionsData || [])
-      
-      // Split products into best sellers and new arrivals
-      const products = productsData || []
-      setBestSellers(products.slice(0, 6))
-      setNewArrivals(products.slice(6, 12))
-    } catch (error) {
-      console.error('Failed to fetch data:', error)
-      // Fallback to empty arrays
-      setCategories([])
-      setPromotions([])
-      setBestSellers([])
-      setNewArrivals([])
-    } finally {
-      setLoading(false)
+        // Fetch products and promotions - franchise-specific if available
+        let productsPromise, promotionsPromise
+
+        if (franchiseId) {
+          productsPromise = franchiseService.getFranchiseProducts(franchiseId)
+          promotionsPromise = franchiseService.getFranchisePromotions(franchiseId)
+            .catch(() => productService.getPromotions()) // Fallback to global promotions
+        } else {
+          productsPromise = productService.getProducts()
+          promotionsPromise = productService.getPromotions()
+        }
+
+        const [categoriesData, productsData, promotionsData] = await Promise.all([
+          categoriesPromise,
+          productsPromise,
+          promotionsPromise,
+        ])
+
+        if (cancelled) return
+
+        setCategories(categoriesData || [])
+        setPromotions(promotionsData || [])
+
+        // Split products into best sellers and new arrivals
+        const products = productsData || []
+        setBestSellers(products.slice(0, 6))
+        setNewArrivals(products.slice(6, 12))
+      } catch {
+        if (cancelled) return
+        setCategories([])
+        setPromotions([])
+        setBestSellers([])
+        setNewArrivals([])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
-  }
+    fetchData()
+    return () => { cancelled = true }
+  }, [selectedFranchise])
 
   useEffect(() => {
     if (isPaused || promotions.length === 0) return
@@ -77,6 +102,31 @@ export default function Home() {
 
   return (
     <div className="space-y-10 animate-fade-in">
+      {/* Location Prompt */}
+      {!selectedFranchise && (
+        <div className="rounded-2xl glass-card border border-brand-mint/30 dark:border-brand-mint/20 p-5 flex items-center justify-between bg-gradient-to-r from-brand-mint/10 to-brand-emerald/5">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-full bg-brand-mint/20">
+              <MapPinIcon className="h-5 w-5 text-brand-mint" />
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900 dark:text-white text-sm">Set your delivery location</p>
+              <p className="text-xs text-gray-600 dark:text-white/70">See products available near you with accurate pricing</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowStoreSelector(true)}
+            className="px-4 py-2 rounded-xl button-primary text-sm font-semibold flex-shrink-0"
+          >
+            Set location
+          </button>
+        </div>
+      )}
+
+      {showStoreSelector && (
+        <StoreSelector onClose={() => setShowStoreSelector(false)} />
+      )}
+
       {/* Hero */}
       <section className="relative overflow-hidden rounded-3xl border border-gray-200 dark:border-white/15 glass-card shadow-glow">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(82,201,139,0.18),transparent_35%),radial-gradient(circle_at_80%_20%,rgba(244,206,106,0.25),transparent_30%)]" />

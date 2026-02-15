@@ -8,17 +8,21 @@ import {
   StarIcon,
   SunIcon,
   MoonIcon,
+  MapPinIcon,
 } from '@heroicons/react/24/outline'
 import { selectCartItemCount, openCart } from '../../store/slices/cartSlice'
 import { selectIsAuthenticated, selectUser } from '../../store/slices/authSlice'
 import { selectPoints } from '../../store/slices/loyaltySlice'
+import { selectSelectedFranchise } from '../../store/slices/franchiseSlice'
 import { useTheme } from '../../contexts/ThemeContext'
 import AuthModal from '../Auth/AuthModal'
+import StoreSelector from '../Location/StoreSelector'
 
 export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
   const location = useLocation()
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showStoreSelector, setShowStoreSelector] = useState(false)
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const { theme, toggleTheme } = useTheme()
@@ -26,6 +30,7 @@ export default function Navbar() {
   const isAuthenticated = useSelector(selectIsAuthenticated)
   const user = useSelector(selectUser)
   const points = useSelector(selectPoints)
+  const selectedFranchise = useSelector(selectSelectedFranchise)
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -133,6 +138,29 @@ export default function Navbar() {
           </div>
         </nav>
 
+        {/* Store indicator bar */}
+        <div className="bg-brand-emerald/10 dark:bg-brand-emerald/20 border-b border-brand-mint/20 dark:border-brand-mint/10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <button
+              onClick={() => setShowStoreSelector(true)}
+              className="w-full flex items-center justify-center gap-2 py-1.5 text-sm hover:opacity-80 transition-opacity"
+            >
+              <MapPinIcon className="h-4 w-4 text-brand-mint" />
+              {selectedFranchise ? (
+                <span className="text-gray-700 dark:text-white/80">
+                  Delivering from <span className="font-semibold text-gray-900 dark:text-white">{selectedFranchise.name}</span>
+                  <span className="text-brand-mint ml-2 text-xs font-medium">Change</span>
+                </span>
+              ) : (
+                <span className="text-gray-700 dark:text-white/80">
+                  Set your location for delivery
+                  <span className="text-brand-mint ml-2 text-xs font-medium">Set location</span>
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
         {/* Mobile search */}
         <div className="md:hidden px-4 pb-3 pt-2 bg-white/95 dark:bg-brand-graphite/95 backdrop-blur-lg border-b border-gray-200 dark:border-white/20">
           <form onSubmit={handleSearch}>
@@ -151,6 +179,7 @@ export default function Navbar() {
       </div>
 
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+      {showStoreSelector && <StoreSelector onClose={() => setShowStoreSelector(false)} />}
     </>
   )
 }

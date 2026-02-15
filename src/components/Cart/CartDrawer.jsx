@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { XMarkIcon, PlusIcon, MinusIcon, TrashIcon, ShoppingBagIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, PlusIcon, MinusIcon, TrashIcon, ShoppingBagIcon, ExclamationTriangleIcon, MapPinIcon } from '@heroicons/react/24/outline'
 import {
   selectCartItems,
   selectCartTotal,
@@ -9,7 +9,8 @@ import {
   removeItem,
   closeCart,
 } from '../../store/slices/cartSlice'
-import { FREE_DELIVERY_THRESHOLD, DELIVERY_FEE } from '../../data/mockData'
+import { selectSelectedFranchise } from '../../store/slices/franchiseSlice'
+import { FREE_DELIVERY_THRESHOLD, DELIVERY_FEE } from '../../data/constants'
 
 export default function CartDrawer() {
   const dispatch = useDispatch()
@@ -17,10 +18,14 @@ export default function CartDrawer() {
   const items = useSelector(selectCartItems)
   const total = useSelector(selectCartTotal)
   const isOpen = useSelector(selectIsCartOpen)
+  const selectedFranchise = useSelector(selectSelectedFranchise)
 
-  const deliveryFee = total < FREE_DELIVERY_THRESHOLD ? DELIVERY_FEE : 0
+  const freeDeliveryMin = selectedFranchise?.free_delivery_min ?? FREE_DELIVERY_THRESHOLD
+  const deliveryFeeAmount = selectedFranchise?.delivery_fee ?? DELIVERY_FEE
+
+  const deliveryFee = total < freeDeliveryMin ? deliveryFeeAmount : 0
   const finalTotal = total + deliveryFee
-  const remainingForFreeDelivery = Math.max(0, FREE_DELIVERY_THRESHOLD - total)
+  const remainingForFreeDelivery = Math.max(0, freeDeliveryMin - total)
   
   // Check if cart contains age-restricted items
   const hasAgeRestrictedItems = items.some(item => item.is_age_restricted)
@@ -48,6 +53,12 @@ export default function CartDrawer() {
             <div>
               <p className="text-sm text-gray-600 dark:text-white/80">Your basket</p>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white bg-gradient-to-r from-brand-mint to-brand-emerald bg-clip-text text-transparent">GRABBI Cart</h2>
+              {selectedFranchise && (
+                <p className="text-xs text-gray-500 dark:text-white/60 mt-0.5 flex items-center gap-1">
+                  <MapPinIcon className="h-3 w-3" />
+                  {selectedFranchise.name}
+                </p>
+              )}
             </div>
             <button
               onClick={() => dispatch(closeCart())}
@@ -73,16 +84,27 @@ export default function CartDrawer() {
           </div>
         )}
 
-        {total < FREE_DELIVERY_THRESHOLD && (
+        {!selectedFranchise && items.length > 0 && (
+          <div className="px-5 py-3 border-b border-gray-200 dark:border-white/5 bg-gradient-to-r from-brand-mint/10 to-brand-emerald/5">
+            <div className="flex items-center gap-2">
+              <MapPinIcon className="h-4 w-4 text-brand-mint flex-shrink-0" />
+              <p className="text-xs text-gray-700 dark:text-white/80">
+                Set your location for accurate pricing
+              </p>
+            </div>
+          </div>
+        )}
+
+        {total < freeDeliveryMin && (
           <div className="px-5 py-4 border-b border-gray-200 dark:border-white/5 bg-gradient-to-r from-brand-emerald/20 to-brand-mint/10">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-800 dark:text-white/90 font-medium">Add £{remainingForFreeDelivery.toFixed(2)} for free delivery</span>
-              <span className="text-xs text-gray-600 dark:text-white/80 font-semibold">{((total / FREE_DELIVERY_THRESHOLD) * 100).toFixed(0)}%</span>
+              <span className="text-xs text-gray-600 dark:text-white/80 font-semibold">{((total / freeDeliveryMin) * 100).toFixed(0)}%</span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-white/12 rounded-full h-2.5 overflow-hidden shadow-inner">
               <div
                 className="h-full bg-gradient-to-r from-brand-mint to-brand-emerald transition-all duration-500"
-                style={{ width: `${Math.min((total / FREE_DELIVERY_THRESHOLD) * 100, 100)}%` }}
+                style={{ width: `${Math.min((total / freeDeliveryMin) * 100, 100)}%` }}
               />
             </div>
           </div>

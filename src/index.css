@@ -280,8 +280,12 @@ textarea:focus-visible {
 /* Card hover effects - GPU accelerated */
 .glass-card,
 .shadow-card {
-  will-change: transform, box-shadow;
   transform: translateZ(0);
+}
+
+.glass-card:hover,
+.shadow-card:hover {
+  will-change: transform, box-shadow;
 }
 
 /* Smooth scrolling */
@@ -293,4 +297,15 @@ html {
   html {
     scroll-behavior: auto;
   }
+}
+
+/* Leaflet + Tailwind compatibility */
+.leaflet-container img {
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.leaflet-container {
+  font-family: inherit;
+  z-index: 0;
 }

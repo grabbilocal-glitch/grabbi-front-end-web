@@ -1,34 +1,40 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { PlusIcon, MinusIcon, StarIcon, ExclamationTriangleIcon, ClockIcon } from '@heroicons/react/24/outline'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { addItem, openCart } from '../store/slices/cartSlice'
+import { selectSelectedFranchise } from '../store/slices/franchiseSlice'
 import { productService } from '../services/productService'
 
 export default function ProductDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const selectedFranchise = useSelector(selectSelectedFranchise)
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
   const [currentImage, setCurrentImage] = useState(0)
 
   useEffect(() => {
+    let cancelled = false
     const fetchProduct = async () => {
       try {
         setLoading(true)
-        const data = await productService.getProduct(id)
+        const params = selectedFranchise?.id ? { franchise_id: selectedFranchise.id } : {}
+        const data = await productService.getProduct(id, params)
+        if (cancelled) return
         setProduct(data)
-      } catch (error) {
-        console.error('Failed to fetch product:', error)
+      } catch {
+        if (cancelled) return
         setProduct(null)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
     fetchProduct()
-  }, [id])
+    return () => { cancelled = true }
+  }, [id, selectedFranchise])
 
   // Set initial image to primary when product loads
   useEffect(() => {
