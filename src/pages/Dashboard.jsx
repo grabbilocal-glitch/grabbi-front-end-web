@@ -180,7 +180,7 @@ export default function Dashboard() {
     setPasswordSaving(true)
     try {
       await api.put('/auth/password', {
-        current_password: currentPassword,
+        old_password: currentPassword,
         new_password: newPassword,
       })
       setToast({ type: 'success', message: 'Password changed successfully' })

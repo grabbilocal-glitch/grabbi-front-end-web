@@ -6,6 +6,12 @@ export const franchiseService = {
     return response.data
   },
 
+  async getNearbyFranchises(lat, lng) {
+    // Backend will filter franchises based on each franchise's own delivery_radius
+    const response = await api.get('/franchises/nearby', { params: { lat, lng } })
+    return response.data
+  },
+
   async getFranchise(id) {
     const response = await api.get(`/franchises/${id}`)
     return response.data

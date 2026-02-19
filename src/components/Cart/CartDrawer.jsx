@@ -5,12 +5,39 @@ import {
   selectCartItems,
   selectCartTotal,
   selectIsCartOpen,
-  updateQuantity,
-  removeItem,
+  selectUpdatingItems,
+  selectRemovingItems,
+  selectAnyCartOperationLoading,
+  updateBackendCartItem,
+  removeFromBackendCart,
   closeCart,
 } from '../../store/slices/cartSlice'
 import { selectSelectedFranchise } from '../../store/slices/franchiseSlice'
 import { FREE_DELIVERY_THRESHOLD, DELIVERY_FEE } from '../../data/constants'
+
+// Simple spinner component
+const Spinner = ({ size = 'sm', className = '' }) => (
+  <svg
+    className={`animate-spin ${size === 'sm' ? 'h-4 w-4' : 'h-5 w-5'} ${className}`}
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+  >
+    <circle
+      className="opacity-25"
+      cx="12"
+      cy="12"
+      r="10"
+      stroke="currentColor"
+      strokeWidth="4"
+    />
+    <path
+      className="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+    />
+  </svg>
+)
 
 export default function CartDrawer() {
   const dispatch = useDispatch()
@@ -19,6 +46,9 @@ export default function CartDrawer() {
   const total = useSelector(selectCartTotal)
   const isOpen = useSelector(selectIsCartOpen)
   const selectedFranchise = useSelector(selectSelectedFranchise)
+  const updatingItems = useSelector(selectUpdatingItems)
+  const removingItems = useSelector(selectRemovingItems)
+  const isCartLoading = useSelector(selectAnyCartOperationLoading)
 
   const freeDeliveryMin = selectedFranchise?.free_delivery_min ?? FREE_DELIVERY_THRESHOLD
   const deliveryFeeAmount = selectedFranchise?.delivery_fee ?? DELIVERY_FEE
@@ -31,6 +61,8 @@ export default function CartDrawer() {
   const hasAgeRestrictedItems = items.some(item => item.is_age_restricted)
 
   const handleCheckout = () => {
+    // Don't navigate if cart operations are in progress
+    if (isCartLoading) return
     dispatch(closeCart())
     navigate('/checkout')
   }
@@ -135,22 +167,45 @@ export default function CartDrawer() {
                 ? (item.images.find(img => img.is_primary)?.image_url || item.images[0].image_url)
                 : item.image || ''
               
+              const isUpdating = updatingItems[item.id]
+              const isRemoving = removingItems[item.id]
+              const isProcessing = isUpdating || isRemoving
+              
               return (
-                <div key={item.id} className="flex items-start space-x-4 rounded-2xl bg-gray-50 dark:bg-white/15 border border-gray-200 dark:border-white/20 p-4 shadow-card hover:shadow-lg transition-shadow">
+                <div 
+                  key={item.id} 
+                  className={`relative flex items-start space-x-4 rounded-2xl bg-gray-50 dark:bg-white/15 border border-gray-200 dark:border-white/20 p-4 shadow-card hover:shadow-lg transition-all ${
+                    isProcessing ? 'opacity-70' : ''
+                  }`}
+                >
+                  {/* Show overlay spinner when removing */}
+                  {isRemoving && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-brand-graphite/50 rounded-2xl z-10">
+                      <Spinner className="text-brand-mint" />
+                    </div>
+                  )}
                   <img
                     src={imageUrl}
                     alt={item.name}
                     className="w-20 h-20 object-cover rounded-xl border border-gray-200 dark:border-white/15"
                   />
-                <div className="flex-1">
+                <div className="flex-1 relative">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-2">{item.name}</h3>
                     <button
-                      onClick={() => dispatch(removeItem(item.id))}
-                      className="p-1 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 text-gray-600 dark:text-white/80 hover:text-red-600 dark:hover:text-red-300 transition-colors"
+                      onClick={() => dispatch(removeFromBackendCart({ 
+                        cartItemId: item.cartItemId, 
+                        productId: item.id 
+                      }))}
+                      disabled={isProcessing}
+                      className="p-1 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 text-gray-600 dark:text-white/80 hover:text-red-600 dark:hover:text-red-300 transition-colors disabled:opacity-50"
                       aria-label={`Remove ${item.name} from cart`}
                     >
-                      <TrashIcon className="h-4 w-4" />
+                      {isRemoving ? (
+                        <Spinner className="text-red-500" />
+                      ) : (
+                        <TrashIcon className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                   <div className="flex items-center gap-2">
@@ -170,19 +225,37 @@ export default function CartDrawer() {
                   <p className="text-brand-gold font-semibold mt-2">£{item.price.toFixed(2)}</p>
                   <div className="flex items-center space-x-3 mt-3">
                     <button
-                      onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity - 1 }))}
-                      className="p-2 rounded-lg bg-gray-200 dark:bg-white/20 hover:bg-gray-300 dark:hover:bg-white/30 transition-all hover:scale-105 active:scale-95"
+                      onClick={() => dispatch(updateBackendCartItem({ 
+                        cartItemId: item.cartItemId, 
+                        productId: item.id,
+                        quantity: item.quantity - 1 
+                      }))}
+                      disabled={isProcessing}
+                      className="p-2 rounded-lg bg-gray-200 dark:bg-white/20 hover:bg-gray-300 dark:hover:bg-white/30 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Decrease quantity"
                     >
-                      <MinusIcon className="h-4 w-4 text-gray-900 dark:text-white" />
+                      {isUpdating ? (
+                        <Spinner className="text-gray-900 dark:text-white" />
+                      ) : (
+                        <MinusIcon className="h-4 w-4 text-gray-900 dark:text-white" />
+                      )}
                     </button>
                     <span className="w-8 text-center text-sm font-semibold text-gray-900 dark:text-white">{item.quantity}</span>
                     <button
-                      onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }))}
-                      className="p-2 rounded-lg bg-gray-200 dark:bg-white/20 hover:bg-gray-300 dark:hover:bg-white/30 transition-all hover:scale-105 active:scale-95"
+                      onClick={() => dispatch(updateBackendCartItem({ 
+                        cartItemId: item.cartItemId, 
+                        productId: item.id,
+                        quantity: item.quantity + 1 
+                      }))}
+                      disabled={isProcessing}
+                      className="p-2 rounded-lg bg-gray-200 dark:bg-white/20 hover:bg-gray-300 dark:hover:bg-white/30 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Increase quantity"
                     >
-                      <PlusIcon className="h-4 w-4 text-gray-900 dark:text-white" />
+                      {isUpdating ? (
+                        <Spinner className="text-gray-900 dark:text-white" />
+                      ) : (
+                        <PlusIcon className="h-4 w-4 text-gray-900 dark:text-white" />
+                      )}
                     </button>
                   </div>
                   </div>
@@ -211,9 +284,17 @@ export default function CartDrawer() {
               </div>
               <button
                 onClick={handleCheckout}
-                className="px-8 py-3 rounded-xl button-primary font-semibold"
+                disabled={isCartLoading}
+                className="px-8 py-3 rounded-xl button-primary font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                Checkout
+                {isCartLoading ? (
+                  <>
+                    <Spinner className="text-brand-graphite" />
+                    <span>Updating...</span>
+                  </>
+                ) : (
+                  'Checkout'
+                )}
               </button>
             </div>
           </div>

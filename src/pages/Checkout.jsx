@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import { selectCartItems, selectCartTotal, clearCart } from '../store/slices/cartSlice'
+import { selectCartItems, selectCartTotal, clearBackendCart, selectCartFranchiseId } from '../store/slices/cartSlice'
 import { selectIsAuthenticated } from '../store/slices/authSlice'
 import { selectSelectedFranchise, selectCustomerLocation, setCustomerLocation } from '../store/slices/franchiseSlice'
 import { addPoints } from '../store/slices/loyaltySlice'
@@ -118,12 +118,12 @@ export default function Checkout() {
 
     setSubmitting(true)
     try {
+      // Items are already synced to backend cart when user adds them
       const orderPayload = {
         franchise_id: selectedFranchise?.id,
         customer_lat: customerLocation?.lat,
         customer_lng: customerLocation?.lng,
         delivery_address: address,
-        items: items.map((item) => ({ product_id: item.id, quantity: item.quantity })),
       }
 
       const result = await orderService.createOrder(orderPayload)
@@ -135,7 +135,8 @@ export default function Checkout() {
         setShowSuccessModal(true)
       } else {
         dispatch(addPoints({ amount: pointsEarned, description: 'Order points' }))
-        dispatch(clearCart())
+        // Clear the backend cart after successful order
+        dispatch(clearBackendCart())
         navigate(`/order/${newOrderId}`)
       }
     } catch (error) {
@@ -388,7 +389,7 @@ export default function Checkout() {
               <button
                 onClick={() => {
                   setShowSuccessModal(false)
-                  dispatch(clearCart())
+                  dispatch(clearBackendCart())
                   navigate(`/order/${orderId}`)
                 }}
                 className="flex-1 py-3 rounded-xl button-ghost"

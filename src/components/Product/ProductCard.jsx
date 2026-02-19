@@ -1,15 +1,17 @@
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { PlusIcon, ClockIcon } from '@heroicons/react/24/outline'
-import { addItem, openCart } from '../../store/slices/cartSlice'
+import { addItemToBackend, openCart, setCartFranchise } from '../../store/slices/cartSlice'
+import { selectSelectedFranchise } from '../../store/slices/franchiseSlice'
 
 export default function ProductCard({ product, compact = false }) {
   const dispatch = useDispatch()
+  const selectedFranchise = useSelector(selectSelectedFranchise)
 
   // Get the appropriate image URL from images array
   const imageUrl = product.images && product.images.length > 0 
     ? (product.images.find(img => img.is_primary)?.image_url || product.images[0].image_url)
-    : product.image || ''
+    : product.image || null
 
   // Check if promotion is active
   const isPromotionActive = () => {
@@ -35,11 +37,34 @@ export default function ProductCard({ product, compact = false }) {
     e.preventDefault()
     e.stopPropagation()
     if (stockQuantity > 0) {
-      dispatch(addItem({ 
-        ...product, 
+      // Set cart franchise if we have a selected franchise
+      if (selectedFranchise?.id) {
+        dispatch(setCartFranchise(selectedFranchise.id))
+      }
+      
+      // Prepare product data for cart
+      const productData = {
+        ...product,
+        id: product.id,
         name: itemName,
         price: currentPrice,
-        quantity: 1 
+        retail_price: product.retail_price,
+        promotion_price: product.promotion_price,
+        pack_size: product.pack_size,
+        brand: product.brand,
+        images: product.images,
+        is_vegan: product.is_vegan,
+        is_vegetarian: product.is_vegetarian,
+        is_gluten_free: product.is_gluten_free,
+        is_age_restricted: product.is_age_restricted,
+        category: product.category,
+      }
+      
+      // Add to backend cart (falls back to local cart if not authenticated)
+      dispatch(addItemToBackend({ 
+        product_id: product.id, 
+        quantity: 1,
+        productData,
       }))
       dispatch(openCart())
     }
@@ -49,12 +74,18 @@ export default function ProductCard({ product, compact = false }) {
     <Link to={`/product/${product.id}`} className="block group">
       <div className="relative rounded-2xl overflow-hidden border border-gray-200 dark:border-white/15 glass-card shadow-card transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-2xl">
         <div className="relative aspect-[4/5] overflow-hidden">
-          <img src={imageUrl} alt={itemName} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+          {imageUrl ? (
+            <img src={imageUrl} alt={itemName} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+          ) : (
+            <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+              <span className="text-gray-400 dark:text-gray-500 text-sm">No image</span>
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
           
           {/* Category Badge (move right if age restricted) */}
           <div className={`absolute top-3 px-3 py-1 rounded-full bg-white/20 text-xs font-semibold text-white backdrop-blur-md border border-white/30 ${product.is_age_restricted ? 'right-3' : 'left-3'}`}>
-            {product.category?.name || product.category || 'Product'}
+            {product.category?.name || (typeof product.category === 'string' ? product.category : 'Product')}
           </div>
           
           {/* Promotion Badge */}

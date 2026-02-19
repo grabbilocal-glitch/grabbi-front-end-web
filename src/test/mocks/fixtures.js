@@ -246,6 +246,37 @@ export const mockNearestFranchise = {
   franchise: mockFranchise,
 }
 
+// Second franchise for multi-store testing
+export const mockFranchise2 = {
+  id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  name: 'Grabbi North Store',
+  slug: 'grabbi-north',
+  owner_id: '993534ee-142e-4170-96e2-ac4278599322',
+  owner: zeroUser,
+  address: 'Manchester, UK',
+  city: 'Manchester',
+  post_code: 'M1 1AA',
+  latitude: 53.4808,
+  longitude: -2.2426,
+  delivery_radius: 5,
+  delivery_fee: 3.99,
+  free_delivery_min: 40,
+  phone: '',
+  email: '',
+  is_active: true,
+  store_hours: [],
+  created_at: '2026-02-13T01:34:22.176672+05:30',
+  updated_at: '2026-02-13T01:34:22.176672+05:30',
+}
+
+// Real shape: GET /api/franchises/nearby returns { franchises: [...] }
+export const mockNearbyFranchises = {
+  franchises: [
+    { ...mockFranchise, distance: 0.5, delivery_time: '30-45 min' },
+    { ...mockFranchise2, distance: 1.2, delivery_time: '45-60 min' },
+  ],
+}
+
 // === AUTH ===
 // Real shape: POST /api/auth/login returns { token, user }
 // Real shape: POST /api/auth/register returns { token, user }

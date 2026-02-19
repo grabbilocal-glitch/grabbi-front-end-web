@@ -24,6 +24,31 @@ const franchiseSlice = createSlice({
         // localStorage may not be available
       }
     },
+    // Change franchise and clear cart if franchise is different
+    // This should be used when user explicitly changes store location
+    changeFranchise: (state, action) => {
+      const newFranchise = action.payload
+      const previousFranchiseId = state.selectedFranchise?.id
+      
+      state.selectedFranchise = newFranchise
+      try {
+        if (newFranchise) {
+          localStorage.setItem('selectedFranchise', JSON.stringify(newFranchise))
+        } else {
+          localStorage.removeItem('selectedFranchise')
+        }
+      } catch {
+        // localStorage may not be available
+      }
+      
+      // Return the franchise change info so the caller can clear cart if needed
+      return {
+        ...state,
+        franchiseChanged: previousFranchiseId && previousFranchiseId !== newFranchise?.id,
+        previousFranchiseId,
+        newFranchiseId: newFranchise?.id,
+      }
+    },
     setNearbyFranchises: (state, action) => {
       state.nearbyFranchises = action.payload
     },
@@ -50,6 +75,7 @@ const franchiseSlice = createSlice({
 
 export const {
   setSelectedFranchise,
+  changeFranchise,
   setNearbyFranchises,
   setCustomerLocation,
   setLocationLoading,
@@ -58,6 +84,7 @@ export const {
 } = franchiseSlice.actions
 
 export const selectSelectedFranchise = (state) => state.franchise.selectedFranchise
+export const selectNearbyFranchises = (state) => state.franchise.nearbyFranchises
 export const selectCustomerLocation = (state) => state.franchise.customerLocation
 export const selectLocationLoading = (state) => state.franchise.locationLoading
 export const selectLocationError = (state) => state.franchise.locationError

@@ -7,6 +7,7 @@ import {
   mockSubcategories,
   mockPromotions,
   mockNearestFranchise,
+  mockNearbyFranchises,
   mockFranchise,
   mockFranchiseProducts,
   mockLoginResponse,
@@ -69,6 +70,11 @@ export const handlers = [
   http.get(`${BASE}/franchises/nearest`, () => {
     // Real API returns { distance: number, franchise: {...} }
     return HttpResponse.json(mockNearestFranchise)
+  }),
+
+  http.get(`${BASE}/franchises/nearby`, () => {
+    // Real API returns { franchises: [...] } with distance and delivery_time
+    return HttpResponse.json(mockNearbyFranchises)
   }),
 
   http.get(`${BASE}/franchises/:id/products`, () => {

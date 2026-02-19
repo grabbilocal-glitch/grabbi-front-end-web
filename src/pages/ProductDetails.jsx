@@ -2,15 +2,40 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { PlusIcon, MinusIcon, StarIcon, ExclamationTriangleIcon, ClockIcon } from '@heroicons/react/24/outline'
 import { useDispatch, useSelector } from 'react-redux'
-import { addItem, openCart } from '../store/slices/cartSlice'
+import { addItemToBackend, openCart, selectAddingToCart } from '../store/slices/cartSlice'
 import { selectSelectedFranchise } from '../store/slices/franchiseSlice'
 import { productService } from '../services/productService'
+
+// Simple spinner component
+const Spinner = ({ className = '' }) => (
+  <svg
+    className={`animate-spin h-5 w-5 ${className}`}
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+  >
+    <circle
+      className="opacity-25"
+      cx="12"
+      cy="12"
+      r="10"
+      stroke="currentColor"
+      strokeWidth="4"
+    />
+    <path
+      className="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+    />
+  </svg>
+)
 
 export default function ProductDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const selectedFranchise = useSelector(selectSelectedFranchise)
+  const addingToCart = useSelector(selectAddingToCart)
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
@@ -94,13 +119,31 @@ export default function ProductDetails() {
 
   const pointsEarned = Math.floor(currentPrice * quantity)
 
-  const handleAddToCart = () => {
-    if (stockQuantity > 0 && quantity > 0) {
-      dispatch(addItem({ 
-        ...product, 
+  const handleAddToCart = async () => {
+    if (stockQuantity > 0 && quantity > 0 && !addingToCart) {
+      const productData = {
+        ...product,
+        id: product.id,
         name: itemName,
         price: currentPrice,
-        quantity 
+        retail_price: product.retail_price,
+        promotion_price: product.promotion_price,
+        pack_size: packSize,
+        packSize: packSize,
+        brand: product.brand,
+        images: product.images,
+        image: images[0],
+        is_vegan: product.is_vegan,
+        is_vegetarian: product.is_vegetarian,
+        is_gluten_free: product.is_gluten_free,
+        is_age_restricted: product.is_age_restricted,
+        quantity,
+      }
+      
+      await dispatch(addItemToBackend({ 
+        product_id: product.id,
+        quantity,
+        productData
       }))
       dispatch(openCart())
     }
@@ -126,9 +169,11 @@ export default function ProductDetails() {
               {currentImage + 1} / {images.length}
             </div>
           )}
+          {packSize && (
           <div className="absolute bottom-4 left-4 px-3 py-2 rounded-full bg-white/95 dark:bg-brand-graphite/95 text-gray-900 dark:text-white/90 backdrop-blur-md border border-gray-200 dark:border-white/20 font-medium">
             {packSize}
           </div>
+          )}
           {/* Promotion Badge on Image */}
           {promotionActive && (
             <div className="absolute bottom-4 right-4 px-3 py-1.5 rounded-full bg-brand-mint/90 text-brand-graphite text-xs font-bold backdrop-blur-md border border-brand-mint flex items-center gap-1">
@@ -296,9 +341,17 @@ export default function ProductDetails() {
 
               <button
                 onClick={handleAddToCart}
-                className="w-full py-4 rounded-2xl button-primary text-brand-graphite text-lg font-bold shadow-glow transition-all hover:scale-[1.02] active:scale-[0.98]"
+                disabled={addingToCart}
+                className="w-full py-4 rounded-2xl button-primary text-brand-graphite text-lg font-bold shadow-glow transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Add to cart – £{(currentPrice * quantity).toFixed(2)}
+                {addingToCart ? (
+                  <>
+                    <Spinner className="text-brand-graphite" />
+                    <span>Adding to cart...</span>
+                  </>
+                ) : (
+                  `Add to cart – £${(currentPrice * quantity).toFixed(2)}`
+                )}
               </button>
             </>
           ) : (
